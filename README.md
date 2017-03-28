@@ -1,7 +1,7 @@
 # openche
 Scripts, patchs and templates to run Eclipse Che on OpenShift
 
-## Deployment of Che on Minishift
+## Deployment Che on Minishift
 
 1\. Get [minishift](https://github.com/minishift/minishift#installation), create an OpenShift cluster (`minishift start`), open the web console (`minishift console`) and read the instructions to install the OpenShift CLI (help->Command Line Tools).
 
@@ -10,12 +10,8 @@ Scripts, patchs and templates to run Eclipse Che on OpenShift
 3\. Configure OpenShift
 
 ```sh
-# Create a serviceaccount with privileged scc
-oc login -u admin -p admin
-oc create serviceaccount cheserviceaccount
-oc adm policy add-scc-to-user privileged -z cheserviceaccount
-
 # Enable OpenShift router
+oc login -u admin -p admin -n default
 docker pull openshift/origin-haproxy-router:`oc version | awk '{ print $2; exit }'`
 oc adm policy add-scc-to-user hostnetwork -z router
 oc adm router --create --service-account=router --expose-metrics --subdomain="openshift.mini"
@@ -23,6 +19,11 @@ oc adm router --create --service-account=router --expose-metrics --subdomain="op
 # Create OpenShift project
 oc login -u openshift-dev -p devel
 oc new-project eclipse-che
+
+# Create a serviceaccount with privileged scc
+oc login -u admin -p admin -n eclipse-che
+oc create serviceaccount cheserviceaccount
+oc adm policy add-scc-to-user privileged -z cheserviceaccount
 ```
 
 4\. Update `/etc/hosts` with a line that associates minishift IP address (`minishift ip`) and the hostname `che.openshift.mini`
@@ -32,19 +33,22 @@ oc new-project eclipse-che
 ```sh
 # Get the script from github
 git clone https://github.com/l0rd/openche
+cd openche
 # Prepare the environment
 oc login -u openshift-dev -p devel
 export CHE_HOSTNAME=che.openshift.mini
-export CHE_IMAGE=codenvy/che-server:5.0.0-latest
+export CHE_IMAGE=mariolet/che-server:openshiftconnector
 export DOCKER0_IP=$(docker run -ti --rm --net=host alpine ip addr show docker0 | grep "inet\b" | awk '{print $2}' | cut -d/ -f1)
+export CHE_OPENSHIFT_ENDPOINT=https://$(minishift ip):8443
 docker pull $CHE_IMAGE
-# Run the script
-cd openche
+# If a previous version of Che was deployed, delete it
+./openche.sh delete
+# Install OpenShift Che templat eand deploy Che
 ./openche.sh deploy
 ```
 Once the pod is successfully started Che dashboard should be now available on the minishift console.
 
-## Deployment of Che on ADB
+## Deployment of Che on ADB (deprecated, use minishift instead)
 
 1\. Get the [atomic developer bundle](https://github.com/projectatomic/adb-atomic-developer-bundle#how-do-i-install-and-run-adb)
 
@@ -83,7 +87,7 @@ oc login -u openshift-dev -p devel
 oc new-project eclipse-che
 
 # Create a serviceaccount with privileged scc
-oc login -u admin -p admin
+oc login -u admin -p admin -n eclipse-che
 oc create serviceaccount cheserviceaccount
 oc adm policy add-scc-to-user privileged -z cheserviceaccount
 ```
@@ -93,13 +97,15 @@ oc adm policy add-scc-to-user privileged -z cheserviceaccount
 ```sh
 # Get the script from github
 git clone https://github.com/l0rd/openche
+cd openche
 # Prepare the environment
 oc login -u openshift-dev -p devel
 export CHE_HOSTNAME=che.openshift.adb
 export CHE_IMAGE=codenvy/che-server:5.0.0-latest
 docker pull $CHE_IMAGE
-# Run the script
-cd openche
+# If a previous version of Che was deployed, delete it
+./openche.sh delete
+# Install OpenShift Che templat eand deploy Che
 ./openche.sh deploy
 ```
 Once the pod is successfully started Che dashboard should be now available at http://che.openshift.adb/
@@ -128,3 +134,4 @@ oc adm policy add-scc-to-user privileged -z cheserviceaccount
 ./openche.sh deploy
 ```
 Once the pod is successfully started Che dashboard should be now available at
+=======

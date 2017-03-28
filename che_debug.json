@@ -81,12 +81,19 @@
             "kind": "Service",
             "apiVersion": "v1",
             "spec": {
+                "type": "NodePort",
                 "ports": [
                     {
                         "port": 8080,
                         "targetPort": 8080,
                         "protocol": "TCP",
                         "name": "tomcat"
+                    },
+                    {
+                        "port": 8000,
+                        "targetPort": 8000,
+                        "protocol": "TCP",
+                        "name": "tomcat-debug"
                     }
                 ],
                 "selector": {
@@ -245,6 +252,10 @@
                                     {
                                         "name": "CHE_LOG_LEVEL",
                                         "value": "${CHE_LOG_LEVEL}"
+                                    },
+                                    {
+                                        "name": "CHE_DEBUG_SERVER",
+                                        "value": "true"
                                     }
                                 ],
                                 "args": [],
@@ -257,7 +268,8 @@
                         "volumes": [
                             {
                                 "name": "che-conf-volume",
-                                "emptyDir": {
+                                "hostPath": {
+                                    "path": "/etc/conf"
                                 }
                             },
                             {
@@ -267,20 +279,6 @@
                                 }
                             },
                             {
-
-                                "name": "che-lib-volume",
-                                "emptyDir": {
-                                }
-                            },
-                            {
-                                "name": "che-workspaces-volume",
-                                "emptyDir": {
-                                }
-                            },
-                            {
-                                "name": "che-storage-volume",
-                                "emptyDir": {
-
                                 "name": "che-data-volume",
                                 "hostPath": {
                                     "path": "/home/user/che"
