@@ -44,7 +44,7 @@ cd openche
 ```
 Once the pod is successfully started Che dashboard should be now available on the minishift console.
 
-## Deployment of Che on ADB 
+## Deployment of Che on ADB
 
 1\. Get the [atomic developer bundle](https://github.com/projectatomic/adb-atomic-developer-bundle#how-do-i-install-and-run-adb)
 
@@ -103,3 +103,28 @@ cd openche
 ./openche.sh deploy
 ```
 Once the pod is successfully started Che dashboard should be now available at http://che.openshift.adb/
+
+## Deployment of Che on OpenShift
+
+1\. Set environment variables
+
+```
+export OPENSHIFT_DOMAIN="your.openshift.domain"
+export CHE_HOSTNAME="${USER}-che.${OPENSHIFT_DOMAIN}"
+export CHE_IMAGE=codenvy/che-server:5.0.0-latest
+oc login
+oc new-project "${USER}-che"
+oc create serviceaccount cheserviceaccount
+```
+2\. Become system:admin or equivalent
+
+```
+oc project "${USER}-che"
+oc adm policy add-scc-to-user privileged -z cheserviceaccount
+```
+
+3\. Deploy Che
+```
+./openche.sh deploy
+```
+Once the pod is successfully started Che dashboard should be now available at
